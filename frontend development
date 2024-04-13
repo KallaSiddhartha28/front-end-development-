@@ -1,0 +1,59 @@
+//html code//
+<!DOCTYPE html>
+<html lang="en" ng-app="githubApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Github Repositories</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+    <div ng-view></div>
+</body>
+</html>
+// JavaScript angular JS//
+var app = angular.module('githubApp', ['ngRoute']);
+
+app.config(['$routeProvider', function($routeProvider) {
+    $routeProvider
+        .when('/', {
+            templateUrl: 'views/main.html',
+            controller: 'MainController'
+        })
+        .otherwise({ redirectTo: '/' });
+}]);
+
+app.controller('MainController', ['$scope', 'GithubService', function($scope, GithubService) {
+    $scope.username = '';
+    $scope.repositories = [];
+
+    $scope.getRepositories = function() {
+        GithubService.getRepositories($scope.username)
+            .then(function(response) {
+                $scope.repositories = response.data;
+            })
+            .catch(function(error) {
+                console.error('Error fetching repositories:', error);
+            });
+    };
+}]);
+
+app.service('GithubService', ['$http', function($http) {
+    this.getRepositories = function(username) {
+        var apiUrl = 'https://api.github.com/users/' + username + '/repos';
+        return $http.get(apiUrl);
+    };
+}]);
+// html//
+<div>
+    <h1>Github Repositories</h1>
+    <input type="text" ng-model="username" placeholder="Enter GitHub username">
+    <button ng-click="getRepositories()">Search</button>
+    <ul>
+        <li ng-repeat="repo in repositories">
+            <a ng-href="{{ repo.html_url }}">{{ repo.name }}</a>
+        </li>
+    </ul>
+</div>
